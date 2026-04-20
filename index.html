@@ -1,0 +1,391 @@
+<!DOCTYPE html>
+<html lang="ar" dir="rtl">
+
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>بدلها</title>
+
+    <link href="https://fonts.googleapis.com/css2?family=Cairo:wght@400;600;700&display=swap" rel="stylesheet">
+
+    <style>
+        * {
+            margin: 0;
+            padding: 0;
+            box-sizing: border-box;
+            font-family: 'Cairo', sans-serif;
+        }
+
+        body {
+            background: #e9e4e1;
+            display: flex;
+            justify-content: center;
+            align-items: center;
+            height: 100vh;
+        }
+
+        .phone {
+            width: 300px;
+            height: 600px;
+            background: #f7f7f7;
+            border-radius: 25px;
+            overflow: hidden;
+            box-shadow: 0 10px 25px rgba(0, 0, 0, 0.2);
+            position: relative;
+        }
+
+        .screen {
+            position: absolute;
+            width: 100%;
+            height: 100%;
+            display: none;
+        }
+
+        .active {
+            display: block;
+        }
+
+        .center {
+            display: flex;
+            flex-direction: column;
+            justify-content: center;
+            align-items: center;
+            height: 100%;
+        }
+
+        .logo {
+            font-size: 32px;
+            color: #2bb673;
+            font-weight: bold;
+        }
+
+        .subtitle {
+            margin: 10px;
+            color: #777;
+        }
+
+        .btn {
+            background: linear-gradient(135deg, #2bb673, #1e90ff);
+            color: white;
+            padding: 10px 20px;
+            border-radius: 10px;
+            cursor: pointer;
+            margin-top: 15px;
+        }
+
+        .header {
+            padding: 15px;
+            font-weight: bold;
+        }
+
+        .card {
+            margin: 10px;
+            padding: 15px;
+            border-radius: 15px;
+            background: linear-gradient(135deg, #2bb673, #4facfe);
+            color: white;
+        }
+
+        .add-btn {
+            margin-top: 10px;
+            background: #1e90ff;
+            padding: 8px;
+            border-radius: 8px;
+            text-align: center;
+            cursor: pointer;
+        }
+
+        .property {
+            background: #fff;
+            margin: 10px;
+            padding: 10px;
+            border-radius: 10px;
+        }
+
+        .property img {
+            width: 100%;
+            border-radius: 10px;
+        }
+
+        input {
+            width: 90%;
+            margin: 10px;
+            padding: 8px;
+            border-radius: 8px;
+            border: 1px solid #ccc;
+        }
+    </style>
+</head>
+
+<body>
+
+    <div class="phone">
+
+        <!-- البداية -->
+        <div class="screen active center" id="start">
+            <div class="logo">بدلها</div>
+            <div class="subtitle">بدل عقارك بسهولة</div>
+            <div class="btn" onclick="checkUser()">دخول</div>
+        </div>
+
+        <!-- تسجيل الدخول -->
+        <div class="screen center" id="auth">
+            <div class="logo" style="margin-bottom: 20px;">حسابي</div>
+            <input type="email" id="email" placeholder="البريد الإلكتروني">
+            <input type="password" id="password" placeholder="كلمة المرور">
+            <div class="btn" onclick="login()">تسجيل الدخول</div>
+            <div class="btn" style="background: #777;" onclick="register()">حساب جديد</div>
+            <div style="margin-top: 15px; color: #777; cursor: pointer;" onclick="show('start')">رجوع</div>
+        </div>
+
+        <!-- الرئيسية -->
+        <div class="screen" id="home">
+            <div class="header" style="display: flex; justify-content: space-between;">
+                <span>القاهرة</span>
+                <span style="color: red; cursor: pointer; font-size: 14px;" onclick="logout()">خروج</span>
+            </div>
+
+            <div class="card">
+                ابدا تبديل عقارك الآن
+                <div class="add-btn" onclick="goAdd()">ضيف عقارك</div>
+            </div>
+
+            <div id="list"></div>
+        </div>
+
+        <!-- إضافة -->
+        <div class="screen" id="add">
+            <div class="header">إضافة عقار</div>
+
+            <input id="title" placeholder="اسم العقار">
+            <input id="location" placeholder="الموقع">
+            <input id="area" placeholder="المساحة">
+            <input id="rooms" placeholder="عدد الغرف">
+            <input id="phone" type="tel" placeholder="رقم الهاتف للتواصل">
+            <input type="file" id="image">
+
+            <div class="btn" onclick="addProperty()">حفظ</div>
+        </div>
+
+    </div>
+
+    <script src="https://cdn.jsdelivr.net/npm/@supabase/supabase-js"></script>
+
+    <script>
+        // ======================
+        // 🔴 حط بياناتك هنا فقط
+        // ======================
+        const SUPABASE_URL = "https://arycfnlqkgrqxyqixcpa.supabase.co";
+        const SUPABASE_KEY = "eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJpc3MiOiJzdXBhYmFzZSIsInJlZiI6ImFyeWNmbmxxa2dycXh5cWl4Y3BhIiwicm9sZSI6ImFub24iLCJpYXQiOjE3NzY3MTQwNjgsImV4cCI6MjA5MjI5MDA2OH0.3olrFQ-tTNIHgvtExloyCyqqm0xw_aWhokHfxWhyDD8";
+
+        const supabaseClient = supabase.createClient(SUPABASE_URL, SUPABASE_KEY);
+
+        // ======================
+        // التنقل
+        // ======================
+        function goHome() {
+            show("home");
+            loadData();
+        }
+
+        function goAdd() {
+            show("add");
+        }
+
+        function show(id) {
+            document.querySelectorAll(".screen").forEach(s => s.classList.remove("active"));
+            document.getElementById(id).classList.add("active");
+        }
+
+        // ======================
+        // نظام تسجيل الدخول (Auth)
+        // ======================
+        async function checkUser() {
+            // التحقق من وجود جلسة (تسجيل دخول سابق)
+            const { data: { session } } = await supabaseClient.auth.getSession();
+            if (session) {
+                goHome(); // مسجل دخول مسبقاً -> للرئيسية
+            } else {
+                show("auth"); // غير مسجل -> صفحة الدخول
+            }
+        }
+
+        async function register() {
+            const email = document.getElementById("email").value;
+            const password = document.getElementById("password").value;
+            if (!email || !password) return alert("الرجاء إدخال البريد الإلكتروني وكلمة المرور");
+
+            const { data, error } = await supabaseClient.auth.signUp({ email, password });
+            if (error) {
+                alert("خطأ في إنشاء الحساب: " + error.message);
+            } else {
+                alert("تم إنشاء الحساب بنجاح! يمكنك تسجيل الدخول الآن.");
+            }
+        }
+
+        async function login() {
+            const email = document.getElementById("email").value;
+            const password = document.getElementById("password").value;
+            if (!email || !password) return alert("الرجاء إدخال البريد الإلكتروني وكلمة المرور");
+
+            const { data, error } = await supabaseClient.auth.signInWithPassword({ email, password });
+            if (error) {
+                alert("بيانات الدخول غير صحيحة!");
+            } else {
+                goHome();
+            }
+        }
+
+        async function logout() {
+            await supabaseClient.auth.signOut();
+            show("start");
+        }
+
+        // ======================
+        // إضافة عقار
+        // ======================
+        async function addProperty() {
+
+            // التحقق من المستخدم الحالي وجلب المعرف (ID) الخاص به
+            const { data: { session } } = await supabaseClient.auth.getSession();
+            if (!session) {
+                alert("يجب تسجيل الدخول أولاً لإضافة عقار");
+                return;
+            }
+            const userId = session.user.id;
+
+            const file = document.getElementById("image").files[0];
+
+            if (!file) {
+                alert("اختر صورة");
+                return;
+            }
+
+            // تنظيف اسم الملف من أي مسافات أو رموز غير مقبولة وأخذ الامتداد فقط
+            const fileExt = file.name.split('.').pop();
+            const fileName = `${Date.now()}.${fileExt}`;
+
+            // رفع الصورة
+            const { error: uploadError } = await supabaseClient.storage.from('images').upload(fileName, file, {
+                contentType: file.type
+            });
+
+            if (uploadError) {
+                alert("خطأ في رفع الصورة! تأكد من إنشاء Storage Bucket باسم 'images' في لوحة تحكم Supabase.");
+                console.error("Storage Upload Error:", uploadError);
+                return;
+            }
+
+            const { data } = supabaseClient.storage.from('images').getPublicUrl(fileName);
+
+            // حفظ البيانات
+            await supabaseClient.from('properties').insert([{
+                title: document.getElementById("title").value,
+                location: document.getElementById("location").value,
+                area: parseInt(document.getElementById("area").value),
+                rooms: parseInt(document.getElementById("rooms").value),
+                phone: document.getElementById("phone").value, // حفظ رقم الهاتف
+                image_url: data.publicUrl,
+                user_id: userId // ربط العقار بالمستخدم الحالي
+            }]);
+
+            // تفريغ الحقول بعد الإضافة بنجاح لكي تكون جاهزة للمرة القادمة
+            document.getElementById("title").value = "";
+            document.getElementById("location").value = "";
+            document.getElementById("area").value = "";
+            document.getElementById("rooms").value = "";
+            document.getElementById("phone").value = "";
+            document.getElementById("image").value = ""; // تفريغ حقل الصورة
+
+            alert("تم الإضافة ✅");
+
+            goHome();
+        }
+
+        // ======================
+        // حذف العقار
+        // ======================
+        async function deleteProperty(event, propertyId) {
+            event.stopPropagation(); // منع فتح صفحة التفاصيل عند النقر على زر الحذف
+            if (!confirm("هل أنت متأكد من حذف هذا العقار؟")) return;
+
+            const { error } = await supabaseClient
+                .from('properties')
+                .delete()
+                .eq('id', propertyId); // نفترض أن العمود الأساسي اسمه id
+
+            if (error) {
+                alert("حدث خطأ أو ليس لديك صلاحية لحذف هذا العقار: " + error.message);
+            } else {
+                alert("تم الحذف بنجاح!");
+                loadData(); // إعادة تحميل القائمة
+            }
+        }
+
+        // ======================
+        // تحميل العقارات
+        // ======================
+        async function loadData() {
+            // الحصول على بيانات المستخدم الحالي (إن وجدت)
+            const { data: { session } } = await supabaseClient.auth.getSession();
+            const currentUserId = session ? session.user.id : null;
+
+            const { data } = await supabaseClient
+                .from('properties')
+                .select("*");
+
+            propertiesData = data; // تخزين البيانات مؤقتاً
+
+            const list = document.getElementById("list");
+            list.innerHTML = "";
+
+            data.forEach(p => {
+                // إظهار زر الحذف فقط إذا كان العقار يخص المستخدم الحالي
+                let deleteBtn = "";
+                if (currentUserId && p.user_id === currentUserId) {
+                    deleteBtn = `<button onclick="deleteProperty(event, '${p.id}')" style="background: #ff4757; color: white; border: none; padding: 5px 10px; border-radius: 5px; cursor: pointer; margin-top: 10px; font-family: 'Cairo';">حذف العقار</button>`;
+                }
+
+                list.innerHTML += `
+        <div class="property" onclick="viewProperty('${p.id}')" style="cursor: pointer; transition: 0.3s;" onmouseover="this.style.boxShadow='0 4px 10px rgba(0,0,0,0.1)'" onmouseout="this.style.boxShadow='none'">
+            <img src="${p.image_url}">
+            <h4>${p.title}</h4>
+            <small>${p.area} م • ${p.rooms} غرف</small>
+            <br>
+            ${deleteBtn}
+        </div>
+        `;
+            });
+        }
+
+        // ======================
+        // عرض تفاصيل العقار
+        // ======================
+        function viewProperty(id) {
+            const p = propertiesData.find(prop => prop.id === id); // البحث عن العقار بالمعرف
+            if (!p) return;
+
+            // إنشاء أزرار التواصل إذا كان الرقم متاحاً
+            const contactSection = p.phone ? `
+                <a href="tel:${p.phone}" style="display: block; text-decoration: none; background: #1e90ff; color: white; padding: 12px; border-radius: 10px; text-align: center; margin-top: 15px; font-weight: bold;">📞 اتصال هاتفي</a>
+                <a href="https://wa.me/${p.phone}" target="_blank" style="display: block; text-decoration: none; background: #25D366; color: white; padding: 12px; border-radius: 10px; text-align: center; margin-top: 10px; font-weight: bold;">💬 تواصل واتساب</a>
+            ` : `<p style="text-align: center; color: #777; margin-top: 15px; padding: 10px; background: #eee; border-radius: 10px;">رقم التواصل غير متوفر</p>`;
+
+            const content = document.getElementById("details-content");
+            content.innerHTML = `
+                <img src="${p.image_url}" style="width: 100%; border-radius: 10px; margin-bottom: 15px;">
+                <h2 style="color: #2bb673; margin-bottom: 5px;">${p.title}</h2>
+                <p style="color: #777; font-size: 14px; margin-bottom: 15px;">📍 ${p.location}</p>
+                <div style="background: #fff; padding: 15px; border-radius: 10px; border: 1px solid #eee;">
+                    <p style="margin-bottom: 10px;"><strong>المساحة:</strong> ${p.area} متر مربع</p>
+                    <p><strong>عدد الغرف:</strong> ${p.rooms} غرفة</p>
+                </div>
+                ${contactSection}
+            `;
+            show("details");
+        }
+    </script>
+
+</body>
+
+</html>
