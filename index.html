@@ -1,3 +1,5 @@
+--- START OF FILE index.html ---
+
 <!DOCTYPE html>
 <html lang="ar" dir="rtl">
 
@@ -7,6 +9,7 @@
     <title>بدلها</title>
 
     <link href="https://fonts.googleapis.com/css2?family=Cairo:wght@400;600;700&display=swap" rel="stylesheet">
+    <script src="https://cdn.jsdelivr.net/npm/@supabase/supabase-js"></script>
 
     <style>
         * {
@@ -17,51 +20,56 @@
         }
 
         :root {
-            --bg-body: #e9e4e1;
-            --bg-phone: #f7f7f7;
-            --bg-card: #fff;
-            --text-main: #000;
-            --text-sub: #777;
-            --input-bg: #fff;
-            --input-border: #ccc;
+            --primary: #2BB673;
+            --secondary: #1E90FF;
+            --text-primary: #333;
+            --text-secondary: #777;
+            --bg-body: #F4F4F4;
+            --bg-card: #FFFFFF;
+            --bg-input: #FFFFFF;
+            --border-color: #E0E0E0;
+            --shadow: 0 4px 12px rgba(0, 0, 0, 0.08);
+            --header-bg: transparent;
         }
 
         body.dark-mode {
+            --text-primary: #F1F1F1;
+            --text-secondary: #AAAAAA;
             --bg-body: #121212;
-            --bg-phone: #1e1e1e;
-            --bg-card: #2c2c2c;
-            --text-main: #f1f1f1;
-            --text-sub: #aaa;
-            --input-bg: #333;
-            --input-border: #444;
+            --bg-card: #1E1E1E;
+            --bg-input: #2C2C2C;
+            --border-color: #444;
+            --shadow: 0 4px 12px rgba(255, 255, 255, 0.05);
+            --header-bg: #121212;
         }
 
         body {
             background: var(--bg-body);
-            color: var(--text-main);
+            color: var(--text-primary);
             display: flex;
             justify-content: center;
             align-items: center;
-            height: 100vh;
+            min-height: 100vh;
         }
 
         .phone {
-            width: 300px;
-            height: 600px;
-            background: var(--bg-phone);
-            border-radius: 25px;
+            width: 320px;
+            height: 640px;
+            background: var(--bg-card);
+            border-radius: 30px;
             overflow: hidden;
-            box-shadow: 0 10px 25px rgba(0, 0, 0, 0.2);
+            box-shadow: 0 15px 35px rgba(0, 0, 0, 0.2);
             position: relative;
+            border: 5px solid #EAEAEA;
         }
 
-        /* جعل التطبيق يملأ الشاشة بالكامل عند فتحه من الهاتف */
         @media (max-width: 600px) {
             .phone {
                 width: 100%;
                 height: 100vh;
                 border-radius: 0;
                 box-shadow: none;
+                border: none;
             }
         }
 
@@ -70,113 +78,469 @@
             width: 100%;
             height: 100%;
             display: none;
+            overflow-y: auto;
+            -webkit-overflow-scrolling: touch;
         }
 
         .screen.active {
             display: block;
         }
 
-        .screen.active.center {
-            display: flex;
+        /* Loading Overlay */
+        #loading-overlay {
+            position: fixed;
+            top: 0;
+            left: 0;
+            width: 100%;
+            height: 100%;
+            background: rgba(0, 0, 0, 0.6);
+            color: white;
+            display: none;
+            justify-content: center;
+            align-items: center;
+            z-index: 3000;
         }
 
-        .center {
+        /* Splash Screen */
+        #splash {
+            background: var(--bg-card);
+            display: flex;
             flex-direction: column;
             justify-content: center;
             align-items: center;
-            height: 100%;
+            text-align: center;
         }
 
-        .logo {
-            font-size: 32px;
-            color: #2bb673;
+        #splash .logo {
+            font-size: 36px;
+            color: var(--primary);
             font-weight: bold;
+            display: flex;
+            flex-direction: column;
+            align-items: center;
         }
 
-        .subtitle {
-            margin: 10px;
-            color: var(--text-sub);
+        #splash img {
+            width: 100px;
+            height: 100px;
+            margin-bottom: 20px;
         }
 
-        .btn {
-            background: linear-gradient(135deg, #2bb673, #1e90ff);
+        #splash .subtitle {
+            margin-top: 10px;
+            color: var(--text-secondary);
+            font-size: 16px;
+        }
+
+        /* Home Screen */
+        .header {
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+            padding: 15px 20px;
+            background: var(--header-bg);
+            border-bottom: 1px solid var(--border-color);
+            position: sticky;
+            top: 0;
+            z-index: 100;
+        }
+
+        .header .title {
+            font-weight: bold;
+            font-size: 18px;
+        }
+
+        .header .search-icon {
+            font-size: 20px;
+            cursor: pointer;
+            color: var(--text-secondary);
+        }
+
+        .banner {
+            background: rgba(43, 182, 115, 0.1);
+            color: var(--text-primary);
+            margin: 15px;
+            padding: 20px;
+            border-radius: 15px;
+            text-align: center;
+        }
+
+        .banner p {
+            margin-bottom: 15px;
+            font-size: 15px;
+        }
+
+        .banner .btn-add {
+            background: var(--primary);
             color: white;
             padding: 10px 20px;
-            border-radius: 10px;
+            border-radius: 20px;
+            font-size: 14px;
+            font-weight: bold;
             cursor: pointer;
-            margin-top: 15px;
+            border: none;
         }
 
-        .header {
-            padding: 15px;
+        .properties-list {
+            padding: 0 15px;
+        }
+
+        .property-card {
+            background: var(--bg-card);
+            border-radius: 15px;
+            box-shadow: var(--shadow);
+            overflow: hidden;
+            margin-bottom: 20px;
+            cursor: pointer;
+            transition: transform 0.2s, box-shadow 0.2s;
+        }
+
+        .property-card:hover {
+            transform: translateY(-5px);
+            box-shadow: 0 8px 16px rgba(0, 0, 0, 0.12);
+        }
+
+        .property-card .image-container {
+            width: 100%;
+            height: 180px;
+            position: relative;
+        }
+
+        .property-card img {
+            width: 100%;
+            height: 100%;
+            object-fit: cover;
+        }
+
+        .property-card .match-badge {
+            position: absolute;
+            top: 10px;
+            right: 10px;
+            background: rgba(43, 182, 115, 0.9);
+            color: white;
+            padding: 4px 10px;
+            border-radius: 20px;
+            font-size: 12px;
             font-weight: bold;
         }
 
-        .card {
-            margin: 10px;
+        .property-card .content {
             padding: 15px;
-            border-radius: 15px;
-            background: linear-gradient(135deg, #2bb673, #4facfe);
+        }
+
+        .property-card .title {
+            font-weight: bold;
+            font-size: 16px;
+            margin-bottom: 5px;
+            display: flex;
+            align-items: center;
+        }
+
+        .property-card .title .location-icon {
+            font-size: 14px;
+            color: var(--text-secondary);
+            margin-right: 5px;
+        }
+
+        .property-card .details-info {
+            color: var(--text-secondary);
+            font-size: 13px;
+            display: flex;
+            align-items: center;
+            flex-wrap: wrap;
+            gap: 10px;
+        }
+
+        .property-card .details-info span {
+            display: flex;
+            align-items: center;
+        }
+
+        .property-card .actions {
+            display: flex;
+            gap: 10px;
+            padding: 0 15px 15px 15px;
+        }
+
+        .property-card .btn-edit,
+        .property-card .btn-delete {
+            flex: 1;
+            padding: 8px 0;
+            border-radius: 20px;
+            font-size: 13px;
+            font-weight: bold;
+            cursor: pointer;
+            border: none;
+            display: flex;
+            justify-content: center;
+            align-items: center;
+        }
+
+        .property-card .btn-edit {
+            background: var(--secondary);
             color: white;
         }
 
-        .add-btn {
-            margin-top: 10px;
-            background: #1e90ff;
-            padding: 8px;
-            border-radius: 8px;
+        .property-card .btn-delete {
+            background: #ff4757;
+            color: white;
+        }
+
+        .logout-link {
             text-align: center;
-            cursor: pointer;
-        }
-
-        .property {
-            background: var(--bg-card);
-            margin: 10px;
             padding: 10px;
-            border-radius: 10px;
+            margin-bottom: 20px;
+            color: #ff4757;
+            cursor: pointer;
+            font-size: 14px;
         }
 
-        .property img {
+        /* Auth Screen */
+        #auth .header {
+            justify-content: center;
+        }
+
+        #auth .content {
+            padding: 30px 20px;
+            display: flex;
+            flex-direction: column;
+            align-items: center;
+        }
+
+        #auth h2 {
+            margin-bottom: 30px;
+            font-size: 24px;
+        }
+
+        .input-group {
             width: 100%;
-            border-radius: 10px;
+            margin-bottom: 15px;
+            position: relative;
         }
 
         input {
-            width: 90%;
-            margin: 10px;
-            padding: 8px;
-            border-radius: 8px;
-            border: 1px solid var(--input-border);
-            background: var(--input-bg);
-            color: var(--text-main);
-        }
-
-        .password-container {
-            position: relative;
-            width: 90%;
-            margin: 10px;
+            width: 100%;
+            padding: 12px;
+            border-radius: 10px;
+            border: 1px solid var(--border-color);
+            background: var(--bg-input);
+            color: var(--text-primary);
+            font-size: 14px;
         }
 
         .password-container input {
-            width: 100%;
-            margin: 0;
+            padding-right: 12px;
+            padding-left: 40px;
         }
 
         .eye-icon {
             position: absolute;
-            left: 15px;
-            /* وضع الأيقونة على اليسار */
+            left: 12px;
             top: 50%;
             transform: translateY(-50%);
             cursor: pointer;
+            font-size: 18px;
+            color: var(--text-secondary);
+        }
+
+        .auth-actions {
+            width: 100%;
+            margin-top: 20px;
+            display: flex;
+            flex-direction: column;
+            gap: 10px;
+        }
+
+        .btn-auth {
+            padding: 12px;
+            border-radius: 20px;
+            font-size: 15px;
+            font-weight: bold;
+            cursor: pointer;
+            border: none;
+            width: 100%;
+            color: white;
+        }
+
+        .btn-primary {
+            background: var(--primary);
+        }
+
+        .btn-secondary {
+            background: var(--secondary);
+        }
+
+        .btn-register {
+            background: none;
+            color: var(--primary);
+            border: 1px solid var(--primary);
+        }
+
+        .btn-back {
+            background: none;
+            color: var(--text-secondary);
+            border: none;
+            font-size: 14px;
+            margin-top: 15px;
+            cursor: pointer;
+        }
+
+        /* Add Property Screen */
+        #add .header {
+            padding: 10px 15px;
+        }
+
+        .header .btn-back-header {
+            color: var(--text-secondary);
+            cursor: pointer;
+            font-size: 16px;
+        }
+
+        .form-group {
+            padding: 15px;
+        }
+
+        .image-upload {
+            border: 2px dashed var(--border-color);
+            border-radius: 15px;
+            padding: 30px;
+            text-align: center;
+            cursor: pointer;
+            margin-bottom: 20px;
+            background: var(--bg-card);
+        }
+
+        .image-upload span {
+            color: var(--text-secondary);
+            font-size: 14px;
+        }
+
+        .form-inputs {
+            background: var(--bg-card);
+            border-radius: 15px;
+            box-shadow: var(--shadow);
+            padding: 15px;
+            margin-bottom: 20px;
+        }
+
+        .form-inputs input,
+        .form-inputs select {
+            width: 100%;
+            padding: 12px;
+            border: none;
+            border-bottom: 1px solid var(--border-color);
+            border-radius: 0;
+            background: transparent;
+            margin-bottom: 5px;
+        }
+
+        .form-inputs input:last-child {
+            border-bottom: none;
+        }
+
+        .btn-submit {
+            background: var(--primary);
+            color: white;
+            padding: 12px;
+            border-radius: 20px;
+            width: 100%;
+            border: none;
+            font-size: 15px;
+            font-weight: bold;
+            cursor: pointer;
+            margin-top: 20px;
+        }
+
+        /* Details Screen */
+        #details .image-slider {
+            width: 100%;
+            height: 250px;
+            position: relative;
+        }
+
+        #details img {
+            width: 100%;
+            height: 100%;
+            object-fit: cover;
+        }
+
+        #details .details-content {
+            padding: 20px;
+            background: var(--bg-body);
+            position: relative;
+            top: -20px;
+            border-radius: 20px 20px 0 0;
+        }
+
+        #details h2 {
+            font-size: 20px;
+            margin-bottom: 10px;
+        }
+
+        #details .location {
+            color: var(--text-secondary);
+            font-size: 14px;
+            margin-bottom: 20px;
+            display: flex;
+            align-items: center;
+        }
+
+        #details .details-card {
+            background: var(--bg-card);
+            border-radius: 15px;
+            box-shadow: var(--shadow);
+            padding: 20px;
+            margin-bottom: 20px;
+        }
+
+        #details .details-item {
+            margin-bottom: 10px;
+            display: flex;
+            justify-content: space-between;
+            font-size: 14px;
+        }
+
+        #details .label {
+            color: var(--text-secondary);
+        }
+
+        #details .contact-btns {
+            display: flex;
+            flex-direction: column;
+            gap: 10px;
+        }
+
+        #details .btn-contact {
+            text-decoration: none;
+            padding: 12px;
+            border-radius: 20px;
+            text-align: center;
+            font-weight: bold;
+            color: white;
+            font-size: 15px;
+        }
+
+        #details .btn-call {
+            background: var(--secondary);
+        }
+
+        #details .btn-whatsapp {
+            background: #25D366;
         }
 
         .theme-toggle {
             position: absolute;
-            top: 15px;
-            left: 15px;
-            font-size: 20px;
+            bottom: 20px;
+            left: 20px;
+            background: var(--bg-card);
+            border-radius: 50%;
+            width: 40px;
+            height: 40px;
+            display: flex;
+            justify-content: center;
+            align-items: center;
             cursor: pointer;
+            box-shadow: var(--shadow);
             z-index: 1000;
         }
     </style>
@@ -184,107 +548,161 @@
 
 <body>
 
+    <div id="loading-overlay">جاري تحميل البيانات...</div>
+
     <div class="phone">
 
-        <!-- زر الوضع الليلي -->
+        <!-- Theme Toggle -->
         <div class="theme-toggle" id="theme-btn" onclick="toggleTheme()">🌙</div>
 
-        <!-- البداية -->
-        <div class="screen center" id="start">
-            <div class="logo">بدلها</div>
-            <div class="subtitle">بدل عقارك بسهولة</div>
-            <div class="btn" onclick="checkUser()">دخول</div>
-        </div>
-
-        <!-- تسجيل الدخول -->
-        <div class="screen center" id="auth">
-            <div class="logo" style="margin-bottom: 20px;">حسابي</div>
-            <input type="email" id="email" placeholder="البريد الإلكتروني">
-            <div class="password-container">
-                <input type="password" id="password" placeholder="كلمة المرور">
-                <span class="eye-icon" onclick="togglePassword('password')">👁️</span>
+        <!-- Splash Screen -->
+        <div class="screen active" id="splash">
+            <div class="logo">
+                <img src="https://img.icons8.com/plasticine/200/home.png" alt="Home Icon">
+                بدلها
             </div>
-            <div class="btn" onclick="login()">تسجيل الدخول</div>
-            <div class="btn" style="background: #777;" onclick="register()">حساب جديد</div>
-            <div style="margin-top: 15px; color: var(--text-sub); cursor: pointer;" onclick="goHome()">رجوع</div>
+            <p class="subtitle">بدل عقارك بسهولة</p>
         </div>
 
-        <!-- الرئيسية -->
-        <div class="screen active" id="home">
-            <div class="header" style="display: flex; justify-content: space-between;">
-                <span>القاهرة</span>
-                <span id="auth-btn" style="color: red; cursor: pointer; font-size: 14px;" onclick="logout()">خروج</span>
+        <!-- Auth Screen -->
+        <div class="screen" id="auth">
+            <div class="header">حسابي</div>
+            <div class="content">
+                <h2>أهلاً بك</h2>
+                <div class="input-group">
+                    <input type="email" id="email" placeholder="البريد الإلكتروني">
+                </div>
+                <div class="input-group password-container">
+                    <input type="password" id="password" placeholder="كلمة المرور">
+                    <span class="eye-icon" onclick="togglePassword('password')">👁️</span>
+                </div>
+                <div class="auth-actions">
+                    <button class="btn-auth btn-primary" onclick="login()">تسجيل الدخول</button>
+                    <button class="btn-auth btn-secondary" onclick="register()">حساب جديد</button>
+                    <button class="btn-back" onclick="goHome()">رجوع</button>
+                </div>
+            </div>
+        </div>
+
+        <!-- Home Screen -->
+        <div class="screen" id="home">
+            <div class="header">
+                <span class="title">القاهرة</span>
+                <span class="search-icon">🔍</span>
             </div>
 
-            <div class="floating-btn" onclick="goAdd()">+</div>
+            <div class="banner">
+                <p>ابحث وابدأ تبديل عقارك الآن</p>
+                <button class="btn-add" onclick="goAdd()">ضيف عقارك +</button>
+            </div>
 
-            <div id="list" style="height: calc(100% - 55px); overflow-y: auto; padding-bottom: 80px;"></div>
+            <div class="properties-list" id="list">
+                <!-- Properties will be added here -->
+            </div>
+
+            <div class="logout-link" id="auth-btn" onclick="logout()">خروج</div>
         </div>
 
-        <!-- إضافة -->
+        <!-- Add Property Screen -->
         <div class="screen" id="add">
-            <div class="header" style="display: flex; justify-content: space-between;">
-                <span>إضافة عقار</span>
-                <span style="color: var(--text-sub); cursor: pointer; font-size: 14px;" onclick="goHome()">رجوع</span>
+            <div class="header">
+                <span class="btn-back-header" onclick="goHome()">➔</span>
+                <span class="title">ضيف عقارك</span>
             </div>
 
-            <input id="title" placeholder="اسم العقار">
-            <input id="location" placeholder="الموقع">
-            <input id="area" placeholder="المساحة">
-            <input id="rooms" placeholder="عدد الغرف">
-            <input id="phone" type="tel" placeholder="رقم الهاتف للتواصل">
-            <input type="file" id="image">
+            <div class="form-group">
+                <div class="image-upload" onclick="document.getElementById('image').click()">
+                    <span>+ أضف صور</span>
+                </div>
+                <input type="file" id="image" style="display: none;">
 
-            <div class="btn" onclick="addProperty()">حفظ</div>
+                <div class="form-inputs">
+                    <input id="title" placeholder="اسم العقار">
+                    <input id="location" placeholder="الموقع">
+                    <input id="area" placeholder="المساحة">
+                    <input id="rooms" placeholder="عدد الغرف">
+                    <input id="phone" type="tel" placeholder="رقم الهاتف للتواصل">
+                </div>
+
+                <button class="btn-submit" id="save-btn" onclick="addProperty()">نشر العقار</button>
+            </div>
         </div>
 
-        <!-- تفاصيل العقار -->
-        <div class="screen" id="details" style="overflow-y: auto;">
-            <div class="header" style="display: flex; justify-content: space-between;">
-                <span style="color: var(--text-sub); cursor: pointer; font-size: 14px;" onclick="goHome()">رجوع</span>
+        <!-- Details Screen -->
+        <div class="screen" id="details">
+            <div class="image-slider">
+                <span class="btn-back-header" onclick="goHome()"
+                    style="position: absolute; top: 15px; right: 15px; color: white; background: rgba(0,0,0,0.5); width: 30px; height: 30px; display: flex; justify-content: center; align-items: center; border-radius: 50%; z-index: 10;">➔</span>
+                <img id="detail-image" src="" alt="Property Image">
             </div>
-            <div id="details-content" style="padding: 15px;"></div>
+
+            <div class="details-content">
+                <h2 id="detail-title"></h2>
+                <div class="location">
+                    <span>📍</span>
+                    <span id="detail-location"></span>
+                </div>
+
+                <div class="details-card">
+                    <div class="details-item">
+                        <span class="label">المساحة</span>
+                        <span id="detail-area"></span>
+                    </div>
+                    <div class="details-item">
+                        <span class="label">عدد الغرف</span>
+                        <span id="detail-rooms"></span>
+                    </div>
+                </div>
+
+                <div class="contact-btns">
+                    <a href="#" class="btn-contact btn-call" id="call-btn">📞 اتصال هاتفي</a>
+                    <a href="#" class="btn-contact btn-whatsapp" id="whatsapp-btn">💬 تواصل واتساب</a>
+                    <p style="text-align: center; color: var(--text-secondary); margin-top: 15px;" id="no-contact-text">
+                        رقم التواصل غير متوفر</p>
+                </div>
+            </div>
         </div>
 
     </div>
 
-    <script src="https://cdn.jsdelivr.net/npm/@supabase/supabase-js"></script>
-
     <script>
-        // ======================
-        // 🔴 حط بياناتك هنا فقط
-        // ======================
+        // Use Supabase credentials from the input
         const SUPABASE_URL = "https://arycfnlqkgrqxyqixcpa.supabase.co";
         const SUPABASE_KEY = "eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJpc3MiOiJzdXBhYmFzZSIsInJlZiI6ImFyeWNmbmxxa2dycXh5cWl4Y3BhIiwicm9sZSI6ImFub24iLCJpYXQiOjE3NzY3MTQwNjgsImV4cCI6MjA5MjI5MDA2OH0.3olrFQ-tTNIHgvtExloyCyqqm0xw_aWhokHfxWhyDD8";
-
         const supabaseClient = supabase.createClient(SUPABASE_URL, SUPABASE_KEY);
 
-        // ======================
-        // التنقل
-        // ======================
+        let propertiesData = [];
+        let currentUserId = null;
+
+        // Function to show/hide loading overlay
+        function showLoading(show) {
+            document.getElementById('loading-overlay').style.display = show ? 'flex' : 'none';
+        }
+
+        // --- Screen Navigation ---
+        function showScreen(screenId) {
+            document.querySelectorAll(".screen").forEach(screen => {
+                screen.classList.remove("active");
+            });
+            document.getElementById(screenId).classList.add("active");
+        }
+
         function goHome() {
-            show("home");
+            showScreen("home");
             loadData();
         }
 
         async function goAdd() {
             const { data: { session } } = await supabaseClient.auth.getSession();
             if (session) {
-                show("add"); // إذا كان مسجلاً، دعه يضيف عقاراً
+                showScreen("add");
             } else {
                 alert("يرجى تسجيل الدخول أو إنشاء حساب لإضافة عقار.");
-                show("auth"); // إذا لم يكن، وجهه لصفحة الدخول
+                showScreen("auth");
             }
         }
 
-        function show(id) {
-            document.querySelectorAll(".screen").forEach(s => s.classList.remove("active"));
-            document.getElementById(id).classList.add("active");
-        }
-
-        // ======================
-        // الوضع الليلي (Dark Mode)
-        // ======================
+        // --- Dark Mode ---
         function toggleTheme() {
             document.body.classList.toggle("dark-mode");
             const isDark = document.body.classList.contains("dark-mode");
@@ -292,34 +710,16 @@
             localStorage.setItem("theme", isDark ? "dark" : "light");
         }
 
+        // Apply dark mode on load
         if (localStorage.getItem("theme") === "dark") {
             document.body.classList.add("dark-mode");
             document.getElementById("theme-btn").innerText = "☀️";
         }
 
-        // ======================
-        // إظهار/إخفاء كلمة المرور
-        // ======================
+        // --- Auth System ---
         function togglePassword(inputId) {
             const input = document.getElementById(inputId);
-            if (input.type === "password") {
-                input.type = "text";
-            } else {
-                input.type = "password";
-            }
-        }
-
-        // ======================
-        // نظام تسجيل الدخول (Auth)
-        // ======================
-        async function checkUser() {
-            // التحقق من وجود جلسة (تسجيل دخول سابق)
-            const { data: { session } } = await supabaseClient.auth.getSession();
-            if (session) {
-                goHome(); // مسجل دخول مسبقاً -> للرئيسية
-            } else {
-                show("auth"); // غير مسجل -> صفحة الدخول
-            }
+            input.type = input.type === "password" ? "text" : "password";
         }
 
         async function register() {
@@ -327,12 +727,15 @@
             const password = document.getElementById("password").value;
             if (!email || !password) return alert("الرجاء إدخال البريد الإلكتروني وكلمة المرور");
 
-            const { data, error } = await supabaseClient.auth.signUp({ email, password });
+            showLoading(true);
+            const { error } = await supabaseClient.auth.signUp({ email, password });
+            showLoading(false);
+
             if (error) {
                 alert("خطأ في إنشاء الحساب: " + error.message);
             } else {
                 alert("تم إنشاء الحساب بنجاح! يمكنك تسجيل الدخول الآن.");
-                show("auth"); // توجيه المستخدم لصفحة الدخول بعد التسجيل بنجاح
+                showScreen("auth");
             }
         }
 
@@ -341,7 +744,10 @@
             const password = document.getElementById("password").value;
             if (!email || !password) return alert("الرجاء إدخال البريد الإلكتروني وكلمة المرور");
 
-            const { data, error } = await supabaseClient.auth.signInWithPassword({ email, password });
+            showLoading(true);
+            const { error } = await supabaseClient.auth.signInWithPassword({ email, password });
+            showLoading(false);
+
             if (error) {
                 alert("بيانات الدخول غير صحيحة!");
             } else {
@@ -350,16 +756,91 @@
         }
 
         async function logout() {
+            showLoading(true);
             await supabaseClient.auth.signOut();
-            goHome(); // الرجوع للرئيسية بعد تسجيل الخروج
+            showLoading(false);
+            goHome();
         }
 
-        // ======================
-        // إضافة عقار
-        // ======================
-        async function addProperty() {
+        // --- Load Properties ---
+        async function loadData() {
+            // Get current user session
+            const { data: { session } } = await supabaseClient.auth.getSession();
+            currentUserId = session ? session.user.id : null;
 
-            // التحقق من المستخدم الحالي وجلب المعرف (ID) الخاص به
+            // Update login/logout button
+            const authBtn = document.getElementById("auth-btn");
+            if (currentUserId) {
+                authBtn.style.display = "block";
+                authBtn.innerText = "خروج";
+                authBtn.style.color = "#ff4757";
+            } else {
+                authBtn.style.display = "block";
+                authBtn.innerText = "دخول";
+                authBtn.style.color = "#1e90ff";
+                authBtn.onclick = () => showScreen("auth");
+            }
+
+            const list = document.getElementById("list");
+            list.innerHTML = `<div style="text-align: center; margin-top: 50px; color: var(--text-sub);">جاري جلب البيانات... ⏳</div>`;
+
+            showLoading(true);
+            const { data, error } = await supabaseClient.from('properties').select("*");
+            showLoading(false);
+
+            if (error) {
+                list.innerHTML = `<div style="text-align: center; margin-top: 50px; color: #ff4757;">خطأ في جلب البيانات</div>`;
+                console.error("Error fetching data:", error);
+                return;
+            }
+
+            propertiesData = data;
+            renderProperties(propertiesData);
+        }
+
+        function renderProperties(data) {
+            const list = document.getElementById("list");
+            list.innerHTML = "";
+
+            if (data.length === 0) {
+                list.innerHTML = `<div style="text-align: center; margin-top: 50px; color: var(--text-sub);">لا توجد عقارات مطابقة 🔍</div>`;
+                return;
+            }
+
+            data.forEach(p => {
+                const imageUrl = p.image_url ? p.image_url.split(',')[0] : 'https://img.icons8.com/plasticine/200/home.png';
+                const isOwner = currentUserId && p.user_id === currentUserId;
+
+                const cardHtml = `
+                    <div class="property-card" onclick="viewProperty('${p.id}')">
+                        <div class="image-container">
+                            <img src="${imageUrl}" alt="${p.title}">
+                            ${isOwner ? '<span class="match-badge">90%</span>' : ''}
+                        </div>
+                        <div class="content">
+                            <h4 class="title">
+                                <span>${p.title}</span>
+                                <span class="location-icon">📍 القاهرة</span>
+                            </h4>
+                            <div class="details-info">
+                                <span>📏 ${p.area} م²</span>
+                                <span>🛏️ ${p.rooms} غرف</span>
+                            </div>
+                        </div>
+                        ${isOwner ? `
+                            <div class="actions">
+                                <button class="btn-edit" onclick="openEditProperty(event, '${p.id}')">تعديل</button>
+                                <button class="btn-delete" onclick="deleteProperty(event, '${p.id}')">حذف</button>
+                            </div>
+                        ` : ''}
+                    </div>
+                `;
+                list.innerHTML += cardHtml;
+            });
+        }
+
+        // --- Add Property ---
+        async function addProperty() {
             const { data: { session } } = await supabaseClient.auth.getSession();
             if (!session) {
                 alert("يجب تسجيل الدخول أولاً لإضافة عقار");
@@ -368,154 +849,148 @@
             const userId = session.user.id;
 
             const file = document.getElementById("image").files[0];
-
             if (!file) {
                 alert("اختر صورة");
                 return;
             }
 
-            // تنظيف اسم الملف من أي مسافات أو رموز غير مقبولة وأخذ الامتداد فقط
+            // Disable button and show loading state
+            const saveBtn = document.getElementById("save-btn");
+            const originalBtnText = saveBtn.innerText;
+            saveBtn.innerText = "جاري نشر العقار... ⏳";
+            saveBtn.style.pointerEvents = "none";
+            saveBtn.style.opacity = "0.7";
+            showLoading(true);
+
+            // Clean file name and upload image
             const fileExt = file.name.split('.').pop();
             const fileName = `${Date.now()}.${fileExt}`;
-
-            // رفع الصورة
             const { error: uploadError } = await supabaseClient.storage.from('images').upload(fileName, file, {
                 contentType: file.type
             });
 
             if (uploadError) {
-                alert("خطأ في رفع الصورة! تأكد من إنشاء Storage Bucket باسم 'images' في لوحة تحكم Supabase.");
+                alert("خطأ في رفع الصورة! تأكد من إنشاء Bucket باسم 'images' في لوحة تحكم Supabase.");
                 console.error("Storage Upload Error:", uploadError);
+
+                // Revert button and close loading overlay
+                saveBtn.innerText = originalBtnText;
+                saveBtn.style.pointerEvents = "auto";
+                saveBtn.style.opacity = "1";
+                showLoading(false);
                 return;
             }
 
+            // Get public URL of the image
             const { data } = supabaseClient.storage.from('images').getPublicUrl(fileName);
 
-            // حفظ البيانات
-            await supabaseClient.from('properties').insert([{
+            // Insert property data
+            const { error: insertError } = await supabaseClient.from('properties').insert([{
                 title: document.getElementById("title").value,
                 location: document.getElementById("location").value,
                 area: parseInt(document.getElementById("area").value),
                 rooms: parseInt(document.getElementById("rooms").value),
-                phone: document.getElementById("phone").value, // حفظ رقم الهاتف
+                phone: document.getElementById("phone").value,
                 image_url: data.publicUrl,
-                user_id: userId // ربط العقار بالمستخدم الحالي
+                user_id: userId
             }]);
 
-            // تفريغ الحقول بعد الإضافة بنجاح لكي تكون جاهزة للمرة القادمة
-            document.getElementById("title").value = "";
-            document.getElementById("location").value = "";
-            document.getElementById("area").value = "";
-            document.getElementById("rooms").value = "";
-            document.getElementById("phone").value = "";
-            document.getElementById("image").value = ""; // تفريغ حقل الصورة
+            showLoading(false);
 
-            alert("تم الإضافة ✅");
+            if (insertError) {
+                alert("خطأ في إضافة العقار: " + insertError.message);
+                // Revert button
+                saveBtn.innerText = originalBtnText;
+                saveBtn.style.pointerEvents = "auto";
+                saveBtn.style.opacity = "1";
+            } else {
+                alert("تم الإضافة ✅");
+                // Clear input fields
+                document.getElementById("title").value = "";
+                document.getElementById("location").value = "";
+                document.getElementById("area").value = "";
+                document.getElementById("rooms").value = "";
+                document.getElementById("phone").value = "";
+                document.getElementById("image").value = "";
 
-            goHome();
+                // Revert button and go to home
+                saveBtn.innerText = originalBtnText;
+                saveBtn.style.pointerEvents = "auto";
+                saveBtn.style.opacity = "1";
+                goHome();
+            }
         }
 
-        // ======================
-        // حذف العقار
-        // ======================
+        // --- Delete Property ---
         async function deleteProperty(event, propertyId) {
-            event.stopPropagation(); // منع فتح صفحة التفاصيل عند النقر على زر الحذف
+            event.stopPropagation();
             if (!confirm("هل أنت متأكد من حذف هذا العقار؟")) return;
 
+            showLoading(true);
             const { error } = await supabaseClient
                 .from('properties')
                 .delete()
-                .eq('id', propertyId); // نفترض أن العمود الأساسي اسمه id
+                .eq('id', propertyId);
+            showLoading(false);
 
             if (error) {
                 alert("حدث خطأ أو ليس لديك صلاحية لحذف هذا العقار: " + error.message);
             } else {
                 alert("تم الحذف بنجاح!");
-                loadData(); // إعادة تحميل القائمة
+                loadData();
             }
         }
 
-        // ======================
-        // تحميل العقارات
-        // ======================
-        async function loadData() {
-            // الحصول على بيانات المستخدم الحالي (إن وجدت)
-            const { data: { session } } = await supabaseClient.auth.getSession();
-            const currentUserId = session ? session.user.id : null;
-
-            // تحديث زر دخول/خروج بناءً على حالة المستخدم
-            const authBtn = document.getElementById("auth-btn");
-            if (authBtn) {
-                if (currentUserId) {
-                    authBtn.innerText = "خروج";
-                    authBtn.style.color = "red";
-                    authBtn.onclick = logout;
-                } else {
-                    authBtn.innerText = "دخول";
-                    authBtn.style.color = "#1e90ff";
-                    authBtn.onclick = () => show("auth");
-                }
-            }
-
-            const { data } = await supabaseClient
-                .from('properties')
-                .select("*");
-
-            propertiesData = data; // تخزين البيانات مؤقتاً
-
-            const list = document.getElementById("list");
-            list.innerHTML = "";
-
-            data.forEach(p => {
-                // إظهار زر الحذف فقط إذا كان العقار يخص المستخدم الحالي
-                let deleteBtn = "";
-                if (currentUserId && p.user_id === currentUserId) {
-                    deleteBtn = `<button onclick="deleteProperty(event, '${p.id}')" style="background: #ff4757; color: white; border: none; padding: 5px 10px; border-radius: 5px; cursor: pointer; margin-top: 10px; font-family: 'Cairo';">حذف العقار</button>`;
-                }
-
-                list.innerHTML += `
-        <div class="property" onclick="viewProperty('${p.id}')" style="cursor: pointer; transition: 0.3s;" onmouseover="this.style.boxShadow='0 4px 10px rgba(0,0,0,0.1)'" onmouseout="this.style.boxShadow='none'">
-            <img src="${p.image_url}">
-            <h4>${p.title}</h4>
-            <small>${p.area} م • ${p.rooms} غرف</small>
-            <br>
-            ${deleteBtn}
-        </div>
-        `;
-            });
+        // --- Edit Property (Stub) ---
+        function openEditProperty(event, propertyId) {
+            event.stopPropagation();
+            alert("وظيفة تعديل العقار غير متاحة في هذا التصميم المحدث حالياً.");
         }
 
-        // ======================
-        // عرض تفاصيل العقار
-        // ======================
+        // --- View Property Details ---
         function viewProperty(id) {
-            const p = propertiesData.find(prop => prop.id === id); // البحث عن العقار بالمعرف
+            const p = propertiesData.find(prop => prop.id === id);
             if (!p) return;
 
-            // إنشاء أزرار التواصل إذا كان الرقم متاحاً
-            const contactSection = p.phone ? `
-                <a href="tel:${p.phone}" style="display: block; text-decoration: none; background: #1e90ff; color: white; padding: 12px; border-radius: 10px; text-align: center; margin-top: 15px; font-weight: bold;">📞 اتصال هاتفي</a>
-                <a href="https://wa.me/${p.phone}" target="_blank" style="display: block; text-decoration: none; background: #25D366; color: white; padding: 12px; border-radius: 10px; text-align: center; margin-top: 10px; font-weight: bold;">💬 تواصل واتساب</a>
-            ` : `<p style="text-align: center; color: var(--text-sub); margin-top: 15px; padding: 10px; background: var(--bg-card); border-radius: 10px; border: 1px solid var(--input-border);">رقم التواصل غير متوفر</p>`;
+            const imageUrl = p.image_url ? p.image_url.split(',')[0] : 'https://img.icons8.com/plasticine/200/home.png';
 
-            const content = document.getElementById("details-content");
-            content.innerHTML = `
-                <img src="${p.image_url}" style="width: 100%; border-radius: 10px; margin-bottom: 15px;">
-                <h2 style="color: #2bb673; margin-bottom: 5px;">${p.title}</h2>
-                <p style="color: var(--text-sub); font-size: 14px; margin-bottom: 15px;">📍 ${p.location}</p>
-                <div style="background: var(--bg-card); padding: 15px; border-radius: 10px; border: 1px solid var(--input-border);">
-                    <p style="margin-bottom: 10px;"><strong>المساحة:</strong> ${p.area} متر مربع</p>
-                    <p><strong>عدد الغرف:</strong> ${p.rooms} غرفة</p>
-                </div>
-                ${contactSection}
-            `;
-            show("details");
+            // Fill detail screen fields
+            document.getElementById("detail-image").src = imageUrl;
+            document.getElementById("detail-title").innerText = p.title;
+            document.getElementById("detail-location").innerText = p.location;
+            document.getElementById("detail-area").innerText = `${p.area} م²`;
+            document.getElementById("detail-rooms").innerText = `${p.rooms} غرف`;
+
+            // Contact section logic
+            const callBtn = document.getElementById("call-btn");
+            const whatsappBtn = document.getElementById("whatsapp-btn");
+            const noContactText = document.getElementById("no-contact-text");
+
+            if (p.phone) {
+                callBtn.href = `tel:${p.phone}`;
+                whatsappBtn.href = `https://wa.me/${p.phone}`;
+                callBtn.style.display = "block";
+                whatsappBtn.style.display = "block";
+                noContactText.style.display = "none";
+            } else {
+                callBtn.style.display = "none";
+                whatsappBtn.style.display = "none";
+                noContactText.style.display = "block";
+            }
+
+            showScreen("details");
         }
 
-        // ======================
-        // جلب البيانات تلقائياً عند فتح التطبيق
-        // ======================
-        window.onload = loadData;
+        // Initial check for user and load home screen
+        async function init() {
+            // Wait for 1 second on splash screen, then check user session and load home
+            setTimeout(async () => {
+                const { data: { session } } = await supabaseClient.auth.getSession();
+                goHome();
+            }, 1000);
+        }
+
+        window.onload = init;
     </script>
 
 </body>
