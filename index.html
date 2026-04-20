@@ -41,12 +41,15 @@
             display: none;
         }
 
-        .active {
+        .screen.active {
             display: block;
         }
 
-        .center {
+        .screen.active.center {
             display: flex;
+        }
+
+        .center {
             flex-direction: column;
             justify-content: center;
             align-items: center;
@@ -152,7 +155,10 @@
 
         <!-- إضافة -->
         <div class="screen" id="add">
-            <div class="header">إضافة عقار</div>
+            <div class="header" style="display: flex; justify-content: space-between;">
+                <span>إضافة عقار</span>
+                <span style="color: #777; cursor: pointer; font-size: 14px;" onclick="goHome()">رجوع</span>
+            </div>
 
             <input id="title" placeholder="اسم العقار">
             <input id="location" placeholder="الموقع">
