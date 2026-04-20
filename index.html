@@ -145,12 +145,9 @@
                 <span style="color: red; cursor: pointer; font-size: 14px;" onclick="logout()">خروج</span>
             </div>
 
-            <div class="card">
-                ابدا تبديل عقارك الآن
-                <div class="add-btn" onclick="goAdd()">ضيف عقارك</div>
-            </div>
+            <div class="floating-btn" onclick="goAdd()">+</div>
 
-            <div id="list"></div>
+            <div id="list" style="height: calc(100% - 55px); overflow-y: auto; padding-bottom: 80px;"></div>
         </div>
 
         <!-- إضافة -->
@@ -165,6 +162,14 @@
             <input type="file" id="image">
 
             <div class="btn" onclick="addProperty()">حفظ</div>
+        </div>
+
+        <!-- تفاصيل العقار -->
+        <div class="screen" id="details" style="overflow-y: auto;">
+            <div class="header" style="display: flex; justify-content: space-between;">
+                <span style="color: #777; cursor: pointer; font-size: 14px;" onclick="goHome()">رجوع</span>
+            </div>
+            <div id="details-content" style="padding: 15px;"></div>
         </div>
 
     </div>
